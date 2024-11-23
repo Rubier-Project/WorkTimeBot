@@ -3,7 +3,8 @@ const api_token = "";
 // -------------------
 
 const TelegramBot = require("node-telegram-bot-api");
-const { Pypi, PackageRelease } = require("./pypi/index");
+const { Pypi, PackageRelease, require_axios } = require("./pypi/index");
+const fs = require("fs");
 const bot = new TelegramBot(api_token, { polling: true });
 const pypi = new Pypi();
 
@@ -30,7 +31,26 @@ bot.on('message', (message) => {
             module_name: module_name,
             callback: (module_logs) => {
                 let mld_logs = new PackageRelease(module_logs);
-                bot.sendDocument(message.chat.id, mld_logs.download_url, { caption: `📁 Package Name: ${mld_logs.package_name}\n🌐 Package Version: ${mld_logs.package_version}\n📃 Search Description: ${mld_logs.search_description}` });
+                let splitted = mld_logs.download_url.split("/");
+                let fname = splitted[splitted.length - 1]
+                const writer = fs.createWriteStream(fname);
+                require_axios(
+                    {
+                        method: "get",
+                        url: mld_logs.download_url,
+                        responseType: "stream"
+                    }
+                ).then(response => {
+                    response.data.pipe(writer);
+                    writer.on('finish', () => {
+                        bot.sendDocument(message.chat.id, fname, { caption: `📁 Package Name: ${mld_logs.package_name}\n🌐 Package Version: ${mld_logs.package_version}\n📃 Search Description: ${mld_logs.search_description}` });
+                    })
+                    writer.on('error', (err) => {
+                        bot.sendMessage(message.chat.id, `♦ Error: ${err}`);
+                    })
+                }).catch(error => {
+                    bot.sendMessage(message.chat.id, `♦ Error: ${error}`);
+                })
             }
         })
     }

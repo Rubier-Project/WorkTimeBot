@@ -2,6 +2,7 @@ let require_axios = require("axios");
 const { PackageStats, PackageRelease } = require("./types");
 const packStates = new PackageStats();
 let axios = new require_axios.Axios("POST");
+let get_axios = new require_axios.Axios("GET");
 
 const getSearchUrl = () => { return "https://pypi.org/search/?q="; };
 const getProjectUrl = () => { return "https://pypi.org/project/"; };
@@ -95,5 +96,5 @@ class Pypi {
 
 
 module.exports = {
-    Pypi, PackageStats, PackageRelease
+    Pypi, PackageStats, PackageRelease, axios, get_axios, require_axios
 }
