@@ -10,11 +10,12 @@ const pypi = new Pypi();
 
 bot.on('message', (message) => {
     if (message.text == "/start"){
-        bot.sendMessage(message.chat.id, "welcome to pym bot - send /help to see documentation");
+        bot.sendMessage(message.chat.id, "welcome to pym bot - send /help to see documentation", {reply_to_message_id: message.message_id});
     } else if ( message.text == "/help" ){
         bot.sendMessage(
             message.chat.id,
-            "/search <MODULE NAME>\n/download <MODULE NAME>"
+            "/search <MODULE NAME>\n/download <MODULE NAME>",
+            {reply_to_message_id: message.message_id}
         )
     } else if ( message.text.startsWith("/search") ){
         const module_name = message.text.substring(7).trim();
@@ -22,7 +23,7 @@ bot.on('message', (message) => {
             module_name: module_name,
             callback: (module_logs) => {
                 let mld_logs = new PackageRelease(module_logs);
-                bot.sendPhoto(message.chat.id, "./github-icon.jpg", { caption: `📁 Package Name: ${mld_logs.package_name}\n🌐 Package Version: ${mld_logs.package_version}\n📃 Search Description: ${mld_logs.search_description}` });
+                bot.sendPhoto(message.chat.id, "./github-icon.jpg", { caption: `📁 Package Name: ${mld_logs.package_name}\n🌐 Package Version: ${mld_logs.package_version}\n📃 Search Description: ${mld_logs.search_description}`, reply_to_message_id: message.message_id });
             }
         })
     } else if ( message.text.startsWith("/download") ){
@@ -43,13 +44,20 @@ bot.on('message', (message) => {
                 ).then(response => {
                     response.data.pipe(writer);
                     writer.on('finish', () => {
-                        bot.sendDocument(message.chat.id, fname, { caption: `📁 Package Name: ${mld_logs.package_name}\n🌐 Package Version: ${mld_logs.package_version}\n📃 Search Description: ${mld_logs.search_description}` });
+                        bot.sendDocument(message.chat.id, fname, { caption: `📁 Package Name: ${mld_logs.package_name}\n🌐 Package Version: ${mld_logs.package_version}\n📃 Search Description: ${mld_logs.search_description}`, reply_to_message_id: message.message_id });
+                        fs.unlinkSync(fname);
                     })
                     writer.on('error', (err) => {
-                        bot.sendMessage(message.chat.id, `♦ Error: ${err}`);
+                        bot.sendMessage(message.chat.id, `♦ Error: ${err}`, {reply_to_message_id: message.message_id});
+                        if (fs.existsSync(fname)){
+                            fs.unlinkSync(fname);
+                        }
                     })
                 }).catch(error => {
-                    bot.sendMessage(message.chat.id, `♦ Error: ${error}`);
+                    bot.sendMessage(message.chat.id, `♦ Error: ${error}`, {reply_to_message_id: message.message_id});
+                    if (fs.existsSync(fname)){
+                        fs.unlinkSync(fname);
+                    }
                 })
             }
         })
