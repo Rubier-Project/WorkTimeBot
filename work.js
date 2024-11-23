@@ -45,19 +45,12 @@ bot.on('message', (message) => {
                     response.data.pipe(writer);
                     writer.on('finish', () => {
                         bot.sendDocument(message.chat.id, fname, { caption: `📁 Package Name: ${mld_logs.package_name}\n🌐 Package Version: ${mld_logs.package_version}\n📃 Search Description: ${mld_logs.search_description}`, reply_to_message_id: message.message_id });
-                        fs.unlinkSync(fname);
                     })
                     writer.on('error', (err) => {
                         bot.sendMessage(message.chat.id, `♦ Error: ${err}`, {reply_to_message_id: message.message_id});
-                        if (fs.existsSync(fname)){
-                            fs.unlinkSync(fname);
-                        }
                     })
                 }).catch(error => {
                     bot.sendMessage(message.chat.id, `♦ Error: ${error}`, {reply_to_message_id: message.message_id});
-                    if (fs.existsSync(fname)){
-                        fs.unlinkSync(fname);
-                    }
                 })
             }
         })
